@@ -1,9 +1,10 @@
-import random
-import streamlit as st
 import cv2
 import cvzone
 from cvzone.HandTrackingModule import HandDetector
+import random
+import streamlit as st
 import time
+
 
 # Initialize camera
 cap = cv2.VideoCapture(0)
