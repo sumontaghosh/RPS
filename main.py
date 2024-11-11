@@ -32,7 +32,7 @@ frame_placeholder = st.empty()
 
 if st.session_state.game_started:
     imgBG = cv2.imread("Resources/BG.png")
-    img = cv2.imread("Resources/player_image.png")
+    img = cv2.imread("Resources")
 
     if img is None or imgBG is None:
         st.error("Error loading game resources. Please check the file paths.")
