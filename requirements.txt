@@ -2,4 +2,5 @@ streamlit
 opencv-python
 cvzone
 mediapipe
+libgl1
 
