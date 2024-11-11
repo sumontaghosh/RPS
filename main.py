@@ -123,3 +123,4 @@ if st.session_state.game_started:
 
         # Update Streamlit frame placeholder
         frame_placeholder.image(imgBG_rgb, channels="RGB")
+
