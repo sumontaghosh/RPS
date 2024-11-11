@@ -2,5 +2,6 @@ streamlit
 opencv-python
 cvzone
 mediapipe
+pip==24.3.1
 
 
