@@ -5,102 +5,87 @@ import random
 import streamlit as st
 import time
 
+# Initialize session state for game control
+if "game_started" not in st.session_state:
+    st.session_state.game_started = False
+if "scores" not in st.session_state:
+    st.session_state.scores = [0, 0]  # [AI, Player]
+
+# Title and buttons
 st.title("Rock Paper Scissors Game")
-
-# Streamlit placeholders
-frame_placeholder = st.empty()
-stop_button = st.button("Stop")
 start_button = st.button("Start")
+stop_button = st.button("Stop")
 
-# Initialize Hand Detector
+# Hand Detector
 detector = HandDetector(maxHands=1)
 
-# Game variables
-scores = [0, 0]  # [AI, Player]
-stateResult = False
-imgAI = cv2.imread("Resources/1.png", cv2.IMREAD_UNCHANGED)
-initialTime = time.time()
-startGame = False
-displayTime = 1  # Time to display the AI's choice in seconds
-displayStartTime = 0
-
-# Start the game when the "Start" button is pressed
+# Game control logic
 if start_button:
-    startGame = True
-    initialTime = time.time()  # Reset initial time
+    st.session_state.game_started = True
+    initial_time = time.time()  # Start round timer
 
-# Only run the game loop if the game is started
-while startGame:
-    # Break the loop if stop button is pressed
-    if stop_button:
-        startGame = False
-        break
+if stop_button:
+    st.session_state.game_started = False
 
-    # Simulate camera input (Streamlit Cloud won’t support `cv2.VideoCapture(0)`)
-    imgBG = cv2.imread("Resources/BG.png")  # Load background image
-    img = cv2.imread("Resources/player_image.png")  # Placeholder for player image
+# Main game display logic
+frame_placeholder = st.empty()
 
-    # Simulate the player camera input processing
-    imgScaled = cv2.resize(img, (0, 0), None, 0.875, 0.875)
-    imgScaled = imgScaled[:, 80:480]
+if st.session_state.game_started:
+    imgBG = cv2.imread("Resources/BG.png")
+    img = cv2.imread("Resources/player_image.png")
 
-    # Find hands
-    hands, img = detector.findHands(imgScaled)  # Detect hands in placeholder image
+    if img is None or imgBG is None:
+        st.error("Error loading game resources. Please check the file paths.")
+    else:
+        # Resize and overlay player image
+        img_scaled = cv2.resize(img, (0, 0), None, 0.875, 0.875)
+        img_scaled = img_scaled[:, 80:480]
+        imgBG[234:654, 795:1195] = img_scaled
 
-    timer = time.time() - initialTime
-    timer_display = int(timer)
-    cv2.putText(imgBG, str(timer_display), (605, 435), cv2.FONT_HERSHEY_PLAIN, 6, (255, 0, 255), 4)
+        # Hand detection
+        hands, img_processed = detector.findHands(img_scaled, flipType=False)
 
-    if timer_display >= 3:
-        stateResult = True
-        initialTime = time.time()
+        # Timer display
+        timer_display = int(time.time() - initial_time)
+        cv2.putText(imgBG, str(timer_display), (605, 435), cv2.FONT_HERSHEY_PLAIN, 6, (255, 0, 255), 4)
 
-        if hands:
-            playerMove = None
-            hand = hands[0]
-            fingers = detector.fingersUp(hand)
-            if fingers == [0, 0, 0, 0, 0]:
-                playerMove = 1  # Rock
-            if fingers == [1, 1, 1, 1, 1]:
-                playerMove = 2  # Paper
-            if fingers == [0, 1, 1, 0, 0]:
-                playerMove = 3  # Scissors
+        if timer_display >= 3:
+            if hands:
+                player_move = None
+                hand = hands[0]
+                fingers = detector.fingersUp(hand)
 
-            randomNumber = random.randint(1, 3)
-            imgAI = cv2.imread(f'Resources/{randomNumber}.png', cv2.IMREAD_UNCHANGED)
-            imgBG = cvzone.overlayPNG(imgBG, imgAI, (149, 310))
+                # Determine player's move
+                if fingers == [0, 0, 0, 0, 0]:
+                    player_move = 1  # Rock
+                elif fingers == [1, 1, 1, 1, 1]:
+                    player_move = 2  # Paper
+                elif fingers == [0, 1, 1, 0, 0]:
+                    player_move = 3  # Scissors
 
-            # Determine the winner
-            if (playerMove == 1 and randomNumber == 3) or \
-                    (playerMove == 2 and randomNumber == 1) or \
-                    (playerMove == 3 and randomNumber == 2):
-                scores[1] += 1  # Player wins
+                # Random AI move
+                ai_move = random.randint(1, 3)
+                imgAI = cv2.imread(f'Resources/{ai_move}.png', cv2.IMREAD_UNCHANGED)
+                imgBG = cvzone.overlayPNG(imgBG, imgAI, (149, 310))
 
-            if (playerMove == 3 and randomNumber == 1) or \
-                    (playerMove == 1 and randomNumber == 2) or \
-                    (playerMove == 2 and randomNumber == 3):
-                scores[0] += 1  # AI wins
+                # Scoring logic
+                if (player_move == 1 and ai_move == 3) or \
+                        (player_move == 2 and ai_move == 1) or \
+                        (player_move == 3 and ai_move == 2):
+                    st.session_state.scores[1] += 1  # Player scores
+                elif (player_move == 3 and ai_move == 1) or \
+                        (player_move == 1 and ai_move == 2) or \
+                        (player_move == 2 and ai_move == 3):
+                    st.session_state.scores[0] += 1  # AI scores
 
-        displayStartTime = time.time()
+                # Restart timer
+                initial_time = time.time()
 
-    imgBG[234:654, 795:1195] = imgScaled
+        # Score display
+        cv2.putText(imgBG, str(st.session_state.scores[0]), (410, 215), cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
+        cv2.putText(imgBG, str(st.session_state.scores[1]), (1112, 215), cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
 
-    # Display imgAI only for the specified duration
-    if stateResult:
-        imgBG = cvzone.overlayPNG(imgBG, imgAI, (149, 310))
-        if (time.time() - displayStartTime) < displayTime:
-            stateResult = True
-        else:
-            stateResult = False
-
-    # Display scores
-    cv2.putText(imgBG, str(scores[0]), (410, 215), cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
-    cv2.putText(imgBG, str(scores[1]), (1112, 215), cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 6)
-
-    # Convert BGR image to RGB for Streamlit
-    imgBG_rgb = cv2.cvtColor(imgBG, cv2.COLOR_BGR2RGB)
-
-    # Update Streamlit frame placeholder
-    frame_placeholder.image(imgBG_rgb, channels="RGB")
-
+        # Convert to RGB and display in Streamlit
+        imgBG_rgb = cv2.cvtColor(imgBG, cv2.COLOR_BGR2RGB)
+        frame_placeholder.image(imgBG_rgb, channels="RGB")
 
