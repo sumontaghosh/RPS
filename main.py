@@ -83,7 +83,10 @@ if st.session_state.game_started:
                 imgAI = load_image(f"Resources/{randomNumber}.png")
 
                 # Resize AI image to match the target region size (420, 400)
-                imgAI_resized = cv2.resize(imgAI, (420, 400))
+                imgAI_resized = cv2.resize(imgAI, (420, 400))  # Resize to fit target region
+
+                # Ensure no mismatch in image sizes
+                assert imgAI_resized.shape == (420, 400, 3), f"Image size mismatch: {imgAI_resized.shape}"
 
                 # Overlay the resized AI image onto the background
                 imgBG = cvzone.overlayPNG(imgBG, imgAI_resized, (149, 310))
@@ -120,4 +123,3 @@ if st.session_state.game_started:
 
         # Update Streamlit frame placeholder
         frame_placeholder.image(imgBG_rgb, channels="RGB")
-
