@@ -81,7 +81,8 @@ if st.session_state.game_started:
 
                 randomNumber = random.randint(1, 3)
                 imgAI = load_image(f"Resources/{randomNumber}.png")
-                imgBG = cvzone.overlayPNG(imgBG, imgAI, (149, 310))
+                imgAI_resized = cv2.resize(imgAI, (420, 400))  # Resize AI image to match target region
+                imgBG = cvzone.overlayPNG(imgBG, imgAI_resized, (149, 310))
 
                 # Determine the winner
                 if (playerMove == 1 and randomNumber == 3) or \
@@ -100,7 +101,7 @@ if st.session_state.game_started:
 
         # Display imgAI only for the specified duration
         if stateResult:
-            imgBG = cvzone.overlayPNG(imgBG, imgAI, (149, 310))
+            imgBG = cvzone.overlayPNG(imgBG, imgAI_resized, (149, 310))
             if (time.time() - displayStartTime) < displayTime:
                 stateResult = True
             else:
@@ -115,3 +116,4 @@ if st.session_state.game_started:
 
         # Update Streamlit frame placeholder
         frame_placeholder.image(imgBG_rgb, channels="RGB")
+
