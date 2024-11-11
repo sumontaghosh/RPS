@@ -81,7 +81,11 @@ if st.session_state.game_started:
 
                 randomNumber = random.randint(1, 3)
                 imgAI = load_image(f"Resources/{randomNumber}.png")
-                imgAI_resized = cv2.resize(imgAI, (420, 400))  # Resize AI image to match target region
+
+                # Resize AI image to match the target region size (420, 400)
+                imgAI_resized = cv2.resize(imgAI, (420, 400))
+
+                # Overlay the resized AI image onto the background
                 imgBG = cvzone.overlayPNG(imgBG, imgAI_resized, (149, 310))
 
                 # Determine the winner
@@ -116,4 +120,5 @@ if st.session_state.game_started:
 
         # Update Streamlit frame placeholder
         frame_placeholder.image(imgBG_rgb, channels="RGB")
+
 
